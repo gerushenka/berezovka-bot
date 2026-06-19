@@ -13,6 +13,17 @@ function createInteractionRouter({ botChannelId, musicCommands }) {
                 return musicCommands.handleAutocomplete(interaction);
             }
 
+            if (interaction.isButton()) {
+                const [, action] = String(interaction.customId || '').split(':');
+                const handler = musicCommands.buttonHandlers?.[action];
+
+                if (!handler) {
+                    return;
+                }
+
+                return handler(interaction);
+            }
+
             if (!interaction.isChatInputCommand()) {
                 return;
             }
@@ -25,7 +36,7 @@ function createInteractionRouter({ botChannelId, musicCommands }) {
 
             return handler(interaction);
         } catch (error) {
-            console.error('❌ Ошибка обработки взаимодействия:', error);
+            console.error('Interaction handling error:', error);
             return replyWithError(interaction);
         }
     };
@@ -36,7 +47,7 @@ function replyWithError(interaction) {
         return undefined;
     }
 
-    const message = '❌ Внутренняя ошибка бота.';
+    const message = 'Internal bot error.';
 
     if (interaction.deferred) {
         return interaction.editReply(message).catch(() => undefined);

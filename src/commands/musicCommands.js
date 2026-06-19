@@ -1,4 +1,8 @@
-const { createQueueEmbed, createTrackAddedEmbed } = require('../discord/musicEmbeds');
+const {
+    createPlayerControlsRow,
+    createQueueEmbed,
+    createTrackAddedEmbed,
+} = require('../discord/musicEmbeds');
 const { trimForDiscord } = require('../utils/text');
 
 const MAX_AUTOCOMPLETE_RESULTS = 10;
@@ -7,7 +11,15 @@ function createMusicCommands({ queueManager, soundCloudService }) {
     return {
         chatInputHandlers: {
             play: handlePlay,
+            pause: handlePause,
             queue: handleQueue,
+            resume: handleResume,
+            skip: handleSkip,
+            stop: handleStop,
+        },
+        buttonHandlers: {
+            pause: handlePause,
+            resume: handleResume,
             skip: handleSkip,
             stop: handleStop,
         },
@@ -74,6 +86,7 @@ function createMusicCommands({ queueManager, soundCloudService }) {
                     resolved.type === 'playlist' ? resolved : resolved.track,
                     queueResult,
                 )],
+                components: [createPlayerControlsRow()],
             });
         } catch (error) {
             console.error('Playback error:', error);
@@ -85,30 +98,59 @@ function createMusicCommands({ queueManager, soundCloudService }) {
         const queueState = queueManager.getQueueState(interaction.guild.id);
 
         if (!queueState || (!queueState.current && !queueState.tracks.length)) {
-            return interaction.reply('Queue is empty.');
+            return reply(interaction, 'Queue is empty.');
         }
 
-        return interaction.reply({
+        return reply(interaction, {
             embeds: [createQueueEmbed(queueState)],
+            components: [createPlayerControlsRow()],
         });
     }
 
+    function handlePause(interaction) {
+        const paused = queueManager.pause(interaction.guild.id);
+
+        if (!paused) {
+            return reply(interaction, { content: 'Nothing is playing right now.', ephemeral: true });
+        }
+
+        if (paused === 'already_paused') {
+            return reply(interaction, { content: 'Playback is already paused.', ephemeral: true });
+        }
+
+        return reply(interaction, 'Playback paused.');
+    }
+
+    function handleResume(interaction) {
+        const resumed = queueManager.resume(interaction.guild.id);
+
+        if (!resumed) {
+            return reply(interaction, { content: 'Nothing is playing right now.', ephemeral: true });
+        }
+
+        if (resumed === 'not_paused') {
+            return reply(interaction, { content: 'Playback is not paused.', ephemeral: true });
+        }
+
+        return reply(interaction, 'Playback resumed.');
+    }
+
     function handleSkip(interaction) {
-        const count = interaction.options.getInteger('count') || 1;
+        const count = interaction.isChatInputCommand()
+            ? (interaction.options.getInteger('count') || 1)
+            : 1;
         const skipped = queueManager.skip(interaction.guild.id, count);
 
         if (!skipped) {
-            return interaction.reply({
-                content: 'Nothing is playing right now.',
-                ephemeral: true,
-            });
+            return reply(interaction, { content: 'Nothing is playing right now.', ephemeral: true });
         }
 
         if (skipped.skippedCount === 1) {
-            return interaction.reply('Track skipped.');
+            return reply(interaction, 'Track skipped.');
         }
 
-        return interaction.reply(
+        return reply(
+            interaction,
             `Skipped ${skipped.skippedCount} tracks total (${skipped.removedQueuedCount} removed from the queue).`,
         );
     }
@@ -117,13 +159,20 @@ function createMusicCommands({ queueManager, soundCloudService }) {
         const stopped = queueManager.stop(interaction.guild.id);
 
         if (!stopped) {
-            return interaction.reply({
-                content: 'Nothing is playing right now.',
-                ephemeral: true,
-            });
+            return reply(interaction, { content: 'Nothing is playing right now.', ephemeral: true });
         }
 
-        return interaction.reply('Playback stopped and queue cleared.');
+        return reply(interaction, 'Playback stopped and queue cleared.');
+    }
+
+    function reply(interaction, message) {
+        const payload = typeof message === 'string' ? { content: message } : message;
+
+        if (interaction.isButton()) {
+            return interaction.reply({ ...payload, ephemeral: payload.ephemeral ?? false });
+        }
+
+        return interaction.reply(payload);
     }
 }
 

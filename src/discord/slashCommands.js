@@ -10,8 +10,14 @@ const commands = [
             .setRequired(true)
             .setAutocomplete(true)),
     new SlashCommandBuilder()
+        .setName('pause')
+        .setDescription('Pause current playback'),
+    new SlashCommandBuilder()
         .setName('queue')
         .setDescription('Show current queue'),
+    new SlashCommandBuilder()
+        .setName('resume')
+        .setDescription('Resume paused playback'),
     new SlashCommandBuilder()
         .setName('skip')
         .setDescription('Skip current track or several tracks')

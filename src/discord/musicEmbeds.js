@@ -1,4 +1,9 @@
-const { EmbedBuilder } = require('discord.js');
+const {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    EmbedBuilder,
+} = require('discord.js');
 
 const SOUNDCLOUD_COLOR = 0xFF6600;
 
@@ -54,6 +59,27 @@ function createNowPlayingEmbed(track, remainingCount) {
         .setFooter({ text: `Remaining in queue: ${remainingCount}` });
 }
 
+function createPlayerControlsRow() {
+    return new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('music:pause')
+            .setLabel('Pause')
+            .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId('music:resume')
+            .setLabel('Resume')
+            .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+            .setCustomId('music:skip')
+            .setLabel('Skip')
+            .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+            .setCustomId('music:stop')
+            .setLabel('Stop')
+            .setStyle(ButtonStyle.Danger),
+    );
+}
+
 function formatPlaylistLink(playlist, addedCount) {
     const summary = `[${escapeLinkLabel(playlist.title)}](${playlist.url})`;
     return `${summary}\nAdded tracks: ${addedCount}`;
@@ -69,6 +95,7 @@ function escapeLinkLabel(value) {
 
 module.exports = {
     createNowPlayingEmbed,
+    createPlayerControlsRow,
     createQueueEmbed,
     createTrackAddedEmbed,
 };

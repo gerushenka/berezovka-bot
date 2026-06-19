@@ -6,7 +6,10 @@ const {
     entersState,
     VoiceConnectionStatus,
 } = require('@discordjs/voice');
-const { createNowPlayingEmbed } = require('../discord/musicEmbeds');
+const {
+    createNowPlayingEmbed,
+    createPlayerControlsRow,
+} = require('../discord/musicEmbeds');
 
 const DISCONNECT_DELAY_MS = 5000;
 
@@ -68,6 +71,7 @@ class MusicQueueManager {
 
         return {
             current: queue.current,
+            isPaused: queue.player.state.status === AudioPlayerStatus.Paused,
             tracks: [...queue.tracks],
         };
     }
@@ -89,6 +93,34 @@ class MusicQueueManager {
             skippedCount: 1 + removedFromQueue.length,
             removedQueuedCount: removedFromQueue.length,
         };
+    }
+
+    pause(guildId) {
+        const queue = this.queues.get(guildId);
+
+        if (!queue || !queue.current) {
+            return false;
+        }
+
+        if (queue.player.state.status === AudioPlayerStatus.Paused) {
+            return 'already_paused';
+        }
+
+        return queue.player.pause();
+    }
+
+    resume(guildId) {
+        const queue = this.queues.get(guildId);
+
+        if (!queue || !queue.current) {
+            return false;
+        }
+
+        if (queue.player.state.status !== AudioPlayerStatus.Paused) {
+            return 'not_paused';
+        }
+
+        return queue.player.unpause();
     }
 
     stop(guildId) {
@@ -268,6 +300,7 @@ class MusicQueueManager {
     notifyNowPlaying(queue, track) {
         this.notifyChannel(queue, {
             embeds: [createNowPlayingEmbed(track, queue.tracks.length)],
+            components: [createPlayerControlsRow()],
         });
     }
 
