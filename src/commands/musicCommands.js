@@ -94,7 +94,8 @@ function createMusicCommands({ queueManager, soundCloudService }) {
     }
 
     function handleSkip(interaction) {
-        const skipped = queueManager.skip(interaction.guild.id);
+        const count = interaction.options.getInteger('count') || 1;
+        const skipped = queueManager.skip(interaction.guild.id, count);
 
         if (!skipped) {
             return interaction.reply({
@@ -103,7 +104,13 @@ function createMusicCommands({ queueManager, soundCloudService }) {
             });
         }
 
-        return interaction.reply('Track skipped.');
+        if (skipped.skippedCount === 1) {
+            return interaction.reply('Track skipped.');
+        }
+
+        return interaction.reply(
+            `Skipped ${skipped.skippedCount} tracks total (${skipped.removedQueuedCount} removed from the queue).`,
+        );
     }
 
     function handleStop(interaction) {

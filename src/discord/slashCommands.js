@@ -14,7 +14,11 @@ const commands = [
         .setDescription('Show current queue'),
     new SlashCommandBuilder()
         .setName('skip')
-        .setDescription('Skip current track'),
+        .setDescription('Skip current track or several tracks')
+        .addIntegerOption(option => option
+            .setName('count')
+            .setDescription('How many tracks to skip, including the current one')
+            .setMinValue(1)),
     new SlashCommandBuilder()
         .setName('stop')
         .setDescription('Stop playback and clear queue'),

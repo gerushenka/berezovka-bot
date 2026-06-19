@@ -72,15 +72,23 @@ class MusicQueueManager {
         };
     }
 
-    skip(guildId) {
+    skip(guildId, count = 1) {
         const queue = this.queues.get(guildId);
 
         if (!queue || !queue.current) {
             return false;
         }
 
+        const normalizedCount = Number.isInteger(count) && count > 0 ? count : 1;
+        const removedFromQueue = normalizedCount > 1
+            ? queue.tracks.splice(0, normalizedCount - 1)
+            : [];
+
         queue.player.stop(true);
-        return true;
+        return {
+            skippedCount: 1 + removedFromQueue.length,
+            removedQueuedCount: removedFromQueue.length,
+        };
     }
 
     stop(guildId) {
