@@ -1,6 +1,5 @@
 const soundcloud = require('soundcloud-downloader').default;
-
-const SOUNDCLOUD_CLIENT_ID = '438032684';
+const config = require('../config');
 
 async function resolveQuery(query, requestedBy) {
     if (isSoundCloudUrl(query)) {
@@ -62,7 +61,7 @@ async function searchTracks(query, limit = 10) {
 
 function downloadStream(trackUrl) {
     return soundcloud.download(trackUrl, {
-        clientID: SOUNDCLOUD_CLIENT_ID,
+        clientID: config.soundCloudClientId,
     });
 }
 

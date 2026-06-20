@@ -1,15 +1,10 @@
-const fs = require('fs');
-const path = require('path');
-
-const configPath = path.resolve(__dirname, '..', 'config.json');
-const fileConfig = fs.existsSync(configPath)
-    ? require(configPath)
-    : {};
+require('dotenv').config({ quiet: true });
 
 const config = {
-    token: process.env.DISCORD_TOKEN || fileConfig.token,
-    clientId: process.env.DISCORD_CLIENT_ID || fileConfig.clientId,
-    botChannelId: process.env.DISCORD_BOT_CHANNEL_ID || fileConfig.botChannelId,
+    token: process.env.DISCORD_TOKEN,
+    clientId: process.env.DISCORD_CLIENT_ID,
+    botChannelId: process.env.DISCORD_BOT_CHANNEL_ID,
+    soundCloudClientId: process.env.SOUNDCLOUD_CLIENT_ID,
 };
 
 for (const [key, value] of Object.entries(config)) {
